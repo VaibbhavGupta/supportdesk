@@ -128,35 +128,44 @@ export const getTicketById = async (req, res) => {
   try {
     const { ticket_id } = req.params
 
-    const { data, error } = await supabase
+    // Get the ticket
+    const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
       .select('*')
       .eq('ticket_id', ticket_id)
       .single()
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({
-          success: false,
-          message: 'Ticket not found'
-        })
-      }
+    if (ticketError) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ticket not found',
+      })
+    }
 
-      throw error
+    // Get notes belonging to this ticket
+    const { data: notes, error: notesError } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('ticket_id', ticket_id)
+      .order('created_at', {
+        ascending: true,
+      })
+
+    if (notesError) {
+      throw notesError
     }
 
     res.status(200).json({
       success: true,
-      ticket: data
+      ticket,
+      notes,
     })
-
   } catch (error) {
     console.error('Get ticket error:', error)
 
     res.status(500).json({
       success: false,
       message: 'Failed to fetch ticket',
-      error: error.message
     })
   }
 }

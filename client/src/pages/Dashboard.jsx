@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getTickets } from '../services/api'
 
 function Dashboard() {
@@ -7,6 +8,7 @@ function Dashboard() {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -248,8 +250,9 @@ function Dashboard() {
                   {tickets.map((ticket) => (
 
                     <tr
-                      key={ticket.ticket_id}
-                      className="border-b border-slate-800 last:border-b-0 hover:bg-slate-800/50"
+                        key={ticket.ticket_id}
+                        onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
+                        className="cursor-pointer border-b border-slate-800 transition hover:bg-slate-800/50"
                     >
 
                       <td className="px-6 py-4 font-medium text-blue-400">
@@ -275,7 +278,17 @@ function Dashboard() {
                       <td className="px-6 py-4">
 
                         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
-                          {ticket.status}
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                                ticket.status === 'Open'
+                                ? 'bg-blue-500/10 text-blue-400'
+                                : ticket.status === 'In Progress'
+                                    ? 'bg-yellow-500/10 text-yellow-400'
+                                    : 'bg-green-500/10 text-green-400'
+                            }`}
+                            >
+                            {ticket.status}
+                            </span>
                         </span>
 
                       </td>
@@ -302,5 +315,5 @@ function Dashboard() {
     </main>
   )
 }
-    
+
 export default Dashboard
