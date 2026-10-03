@@ -3,6 +3,8 @@ import { getTickets } from '../services/api'
 
 function Dashboard() {
   const [tickets, setTickets] = useState([])
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -10,8 +12,19 @@ function Dashboard() {
     const fetchTickets = async () => {
       try {
         setLoading(true)
+        setError('')
 
-        const data = await getTickets()
+        const params = {}
+
+        if (search.trim() !== '') {
+          params.search = search
+        }
+
+        if (status !== '') {
+          params.status = status
+        }
+
+        const data = await getTickets(params)
 
         setTickets(data.tickets)
       } catch (error) {
@@ -23,7 +36,7 @@ function Dashboard() {
     }
 
     fetchTickets()
-  }, [])
+  }, [search, status])
 
   const totalTickets = tickets.length
 
@@ -38,6 +51,11 @@ function Dashboard() {
   const closedTickets = tickets.filter(
     (ticket) => ticket.status === 'Closed'
   ).length
+
+  const clearFilters = () => {
+    setSearch('')
+    setStatus('')
+  }
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
@@ -105,6 +123,70 @@ function Dashboard() {
 
       </div>
 
+      {/* Search and Filter */}
+      <div className="mt-10 rounded-xl border border-slate-800 bg-slate-900 p-5">
+
+        <div className="flex flex-col gap-4 md:flex-row">
+
+          {/* Search */}
+          <div className="flex-1">
+
+            <label
+              htmlFor="search"
+              className="mb-2 block text-sm font-medium text-slate-300"
+            >
+              Search Tickets
+            </label>
+
+            <input
+              id="search"
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by ID, customer, email, subject..."
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
+            />
+
+          </div>
+
+          {/* Status Filter */}
+          <div className="w-full md:w-56">
+
+            <label
+              htmlFor="status"
+              className="mb-2 block text-sm font-medium text-slate-300"
+            >
+              Status
+            </label>
+
+            <select
+              id="status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+            >
+              <option value="">All Statuses</option>
+              <option value="Open">Open</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Closed">Closed</option>
+            </select>
+
+          </div>
+
+        </div>
+
+        {/* Clear Filters */}
+        {(search || status) && (
+          <button
+            onClick={clearFilters}
+            className="mt-4 text-sm font-medium text-blue-400 transition hover:text-blue-300"
+          >
+            Clear filters
+          </button>
+        )}
+
+      </div>
+
       {/* Tickets */}
       <div className="mt-10">
 
@@ -136,6 +218,7 @@ function Dashboard() {
                 <thead className="border-b border-slate-800 bg-slate-950">
 
                   <tr>
+
                     <th className="px-6 py-4 text-sm font-medium text-slate-400">
                       Ticket ID
                     </th>
@@ -155,6 +238,7 @@ function Dashboard() {
                     <th className="px-6 py-4 text-sm font-medium text-slate-400">
                       Created
                     </th>
+
                   </tr>
 
                 </thead>
@@ -218,5 +302,5 @@ function Dashboard() {
     </main>
   )
 }
-
+    
 export default Dashboard
