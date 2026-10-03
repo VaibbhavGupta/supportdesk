@@ -15,46 +15,45 @@ function TicketDetails() {
   const [note, setNote] = useState('')
   const [updating, setUpdating] = useState(false)
 
-  useEffect(() => {
-    const fetchTicket = async () => {
-      try {
-        setLoading(true)
-        setError('')
+  const fetchTicket = async () => {
+    try {
+      setLoading(true)
+      setError('')
 
-        const data = await getTicketById(ticketId)
+      const data = await getTicketById(ticketId)
 
-        setTicket(data.ticket)
-        setStatus(data.ticket.status)
-      } catch (error) {
-        console.error(error)
-        setError('Failed to load ticket')
-      } finally {
-        setLoading(false)
-      }
+      setTicket(data.ticket)
+      setNotes(data.notes || [])
+      setStatus(data.ticket.status)
+    } catch (error) {
+      console.error(error)
+      setError('Failed to load ticket')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchTicket()
   }, [ticketId])
 
   const handleUpdate = async () => {
+    if (!note.trim() && status === ticket.status) {
+      return
+    }
+
     try {
       setUpdating(true)
       setError('')
 
-      const data = await updateTicket(ticketId, {
+      await updateTicket(ticketId, {
         status,
-        notes: note,
+        notes: note.trim(),
       })
 
-      setTicket(data.ticket)
       setNote('')
 
-      // Refresh the ticket so the new note appears
-      const refreshedData = await getTicketById(ticketId)
-
-      setTicket(refreshedData.ticket)
-      setNotes(refreshedData.notes || [])
-      setStatus(refreshedData.ticket.status)
+      await fetchTicket()
     } catch (error) {
       console.error(error)
       setError(error.message || 'Failed to update ticket')
@@ -66,7 +65,7 @@ function TicketDetails() {
   if (loading) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
+        <div className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
           Loading ticket...
         </div>
       </main>
@@ -76,212 +75,280 @@ function TicketDetails() {
   if (error && !ticket) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-400">
+
+        <div className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           {error}
         </div>
 
         <button
           onClick={() => navigate('/')}
-          className="mt-4 rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+          className="mt-4 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          Back to Dashboard
+          Back to Tickets
         </button>
+
       </main>
     )
+  }
+
+  const getStatusClasses = (ticketStatus) => {
+    if (ticketStatus === 'Open') {
+      return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+    }
+
+    if (ticketStatus === 'In Progress') {
+      return 'bg-amber-50 text-amber-700 ring-amber-600/20'
+    }
+
+    return 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
   }
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
 
-      {/* Back Button */}
+      {/* Back */}
       <button
         onClick={() => navigate('/')}
-        className="mb-6 text-sm text-slate-400 transition hover:text-white"
+        className="mb-6 text-sm font-medium text-slate-500 transition hover:text-slate-900"
       >
-        ← Back to Dashboard
+        ← Back to tickets
       </button>
 
-      {/* Heading */}
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      {/* Header */}
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+
         <div>
-          <p className="text-sm text-blue-400">
+          <p className="text-sm font-medium text-blue-600">
             {ticket.ticket_id}
           </p>
 
-          <h2 className="mt-1 text-3xl font-bold text-white">
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
             {ticket.subject}
           </h2>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Created {new Date(ticket.created_at).toLocaleString()}
+          </p>
         </div>
 
-        <span className="w-fit rounded-full bg-slate-800 px-4 py-2 text-sm text-slate-300">
+        <span
+          className={`inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+            ticket.status
+          )}`}
+        >
           {ticket.status}
         </span>
+
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {/* Ticket Information */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+      {/* Customer + Description */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
 
-        <h3 className="mb-6 text-lg font-semibold text-white">
-          Ticket Information
-        </h3>
+        {/* Main ticket */}
+        <div className="rounded-lg border border-slate-200 bg-white">
 
-        <div className="grid gap-6 sm:grid-cols-2">
-
-          <div>
-            <p className="text-sm text-slate-500">
-              Customer Name
-            </p>
-
-            <p className="mt-1 text-white">
-              {ticket.customer_name}
-            </p>
+          <div className="border-b border-slate-200 px-6 py-5">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Issue Description
+            </h3>
           </div>
 
-          <div>
-            <p className="text-sm text-slate-500">
-              Customer Email
-            </p>
-
-            <p className="mt-1 text-white">
-              {ticket.customer_email}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-500">
-              Created
-            </p>
-
-            <p className="mt-1 text-white">
-              {new Date(ticket.created_at).toLocaleString()}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm text-slate-500">
-              Last Updated
-            </p>
-
-            <p className="mt-1 text-white">
-              {new Date(ticket.updated_at).toLocaleString()}
+          <div className="px-6 py-6">
+            <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
+              {ticket.description}
             </p>
           </div>
 
         </div>
 
-        {/* Description */}
-        <div className="mt-8 border-t border-slate-800 pt-6">
+        {/* Customer */}
+        <div className="rounded-lg border border-slate-200 bg-white">
 
-          <p className="text-sm text-slate-500">
-            Description
-          </p>
+          <div className="border-b border-slate-200 px-5 py-4">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Customer
+            </h3>
+          </div>
 
-          <p className="mt-2 whitespace-pre-wrap leading-7 text-slate-300">
-            {ticket.description}
-          </p>
+          <div className="space-y-4 px-5 py-5">
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Name
+              </p>
+
+              <p className="mt-1 text-sm font-medium text-slate-900">
+                {ticket.customer_name}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Email
+              </p>
+
+              <p className="mt-1 break-all text-sm text-slate-600">
+                {ticket.customer_email}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Last Updated
+              </p>
+
+              <p className="mt-1 text-sm text-slate-600">
+                {new Date(ticket.updated_at).toLocaleString()}
+              </p>
+            </div>
+
+          </div>
 
         </div>
 
       </div>
 
-      {/* Update Ticket */}
-      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
+      {/* Update */}
+      <div className="mt-6 rounded-lg border border-slate-200 bg-white">
 
-        <h3 className="mb-6 text-lg font-semibold text-white">
-          Update Ticket
-        </h3>
+        <div className="border-b border-slate-200 px-6 py-5">
+          <h3 className="text-sm font-semibold text-slate-900">
+            Update Ticket
+          </h3>
 
-        {/* Status */}
-        <div>
-          <label
-            htmlFor="ticket-status"
-            className="mb-2 block text-sm font-medium text-slate-300"
-          >
-            Status
-          </label>
-
-          <select
-            id="ticket-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500 sm:w-72"
-          >
-            <option value="Open">Open</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Closed">Closed</option>
-          </select>
-        </div>
-
-        {/* Note */}
-        <div className="mt-6">
-
-          <label
-            htmlFor="ticket-note"
-            className="mb-2 block text-sm font-medium text-slate-300"
-          >
-            Add Note
-          </label>
-
-          <textarea
-            id="ticket-note"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="Add an internal support note..."
-            rows="4"
-            className="w-full resize-none rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
-          />
-
-        </div>
-
-        <button
-          onClick={handleUpdate}
-          disabled={updating}
-          className="mt-4 rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {updating ? 'Saving...' : 'Save Changes'}
-        </button>
-
-      </div>
-            {/* Notes */}
-      <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
-
-        <h3 className="mb-6 text-lg font-semibold text-white">
-          Notes
-        </h3>
-
-        {notes.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            No notes have been added yet.
+          <p className="mt-1 text-sm text-slate-500">
+            Change the ticket status or add an internal note.
           </p>
-        ) : (
-          <div className="space-y-4">
+        </div>
 
-            {notes.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-lg border border-slate-800 bg-slate-950 p-4"
-              >
+        <div className="space-y-6 p-6">
 
-                <p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">
-                  {item.note_text}
-                </p>
+          {/* Status */}
+          <div>
+            <label
+              htmlFor="ticket-status"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Status
+            </label>
 
-                <p className="mt-3 text-xs text-slate-500">
-                  {new Date(item.created_at).toLocaleString()}
-                </p>
+            <select
+              id="ticket-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 sm:w-64"
+            >
+              <option value="Open">
+                Open
+              </option>
 
-              </div>
-            ))}
+              <option value="In Progress">
+                In Progress
+              </option>
+
+              <option value="Closed">
+                Closed
+              </option>
+            </select>
+          </div>
+
+          {/* Note */}
+          <div>
+            <label
+              htmlFor="ticket-note"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Add Note
+            </label>
+
+            <textarea
+              id="ticket-note"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Add an internal note for the support team..."
+              rows="4"
+              className="w-full resize-y rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+            />
+          </div>
+
+          <div className="flex justify-end border-t border-slate-100 pt-5">
+
+            <button
+              onClick={handleUpdate}
+              disabled={
+                updating ||
+                (!note.trim() && status === ticket.status)
+              }
+              className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {updating ? 'Saving...' : 'Save Changes'}
+            </button>
 
           </div>
-        )}
+
+        </div>
+
+      </div>
+
+      {/* Notes */}
+      <div className="mt-6 rounded-lg border border-slate-200 bg-white">
+
+        <div className="border-b border-slate-200 px-6 py-5">
+          <div className="flex items-center justify-between">
+
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">
+                Internal Notes
+              </h3>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Notes visible to the support team.
+              </p>
+            </div>
+
+            <span className="text-xs font-medium text-slate-400">
+              {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+            </span>
+
+          </div>
+        </div>
+
+        <div className="p-6">
+
+          {notes.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No internal notes have been added yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+
+              {notes.map((item) => (
+                <div
+                  key={item.id}
+                  className="border-l-2 border-slate-200 pl-4"
+                >
+
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                    {item.note_text}
+                  </p>
+
+                  <p className="mt-2 text-xs text-slate-400">
+                    {new Date(item.created_at).toLocaleString()}
+                  </p>
+
+                </div>
+              ))}
+
+            </div>
+          )}
+
+        </div>
 
       </div>
 

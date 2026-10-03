@@ -7,7 +7,7 @@ import TicketDetails from './pages/TicketDetails'
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-slate-50">
         <Navbar />
 
        <Routes>

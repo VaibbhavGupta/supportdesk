@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { getTickets } from '../services/api'
 
 function Dashboard() {
+  const navigate = useNavigate()
+
   const [tickets, setTickets] = useState([])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -18,17 +19,17 @@ function Dashboard() {
 
         const params = {}
 
-        if (search.trim() !== '') {
+        if (search.trim()) {
           params.search = search
         }
 
-        if (status !== '') {
+        if (status) {
           params.status = status
         }
 
         const data = await getTickets(params)
 
-        setTickets(data.tickets)
+        setTickets(data.tickets || [])
       } catch (error) {
         console.error(error)
         setError('Failed to load tickets')
@@ -59,246 +60,281 @@ function Dashboard() {
     setStatus('')
   }
 
+  const getStatusClasses = (ticketStatus) => {
+    if (ticketStatus === 'Open') {
+      return 'bg-blue-50 text-blue-700 ring-blue-600/20'
+    }
+
+    if (ticketStatus === 'In Progress') {
+      return 'bg-amber-50 text-amber-700 ring-amber-600/20'
+    }
+
+    return 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
 
-      {/* Page Heading */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white">
-          Dashboard
-        </h2>
+      {/* Page Header */}
+      <div>
+            <p className="text-sm font-medium text-blue-600">
+                Support overview
+            </p>
 
-        <p className="mt-2 text-slate-400">
-          Manage and track customer support tickets.
-        </p>
-      </div>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+                Dashboard
+            </h2>
 
-      {/* Error */}
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-400">
-          {error}
-        </div>
-      )}
+            <p className="mt-1 text-sm text-slate-500">
+                Manage and track customer support tickets.
+            </p>
+            </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <p className="text-sm text-slate-500">
             Total Tickets
           </p>
 
-          <p className="mt-2 text-3xl font-bold text-white">
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
             {totalTickets}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">
-            Open
-          </p>
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Open
+            </p>
 
-          <p className="mt-2 text-3xl font-bold text-blue-400">
+            <span className="h-2 w-2 rounded-full bg-blue-500" />
+          </div>
+
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
             {openTickets}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">
-            In Progress
-          </p>
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              In Progress
+            </p>
 
-          <p className="mt-2 text-3xl font-bold text-yellow-400">
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+          </div>
+
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
             {inProgressTickets}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">
-            Closed
-          </p>
+        <div className="rounded-lg border border-slate-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Closed
+            </p>
 
-          <p className="mt-2 text-3xl font-bold text-green-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          </div>
+
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
             {closedTickets}
           </p>
         </div>
 
       </div>
 
-      {/* Search and Filter */}
-      <div className="mt-10 rounded-xl border border-slate-800 bg-slate-900 p-5">
+      {/* Filters */}
+      <div className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
 
-        <div className="flex flex-col gap-4 md:flex-row">
+        <div className="grid gap-4 md:grid-cols-[1fr_220px_auto] md:items-end">
 
-          {/* Search */}
-          <div className="flex-1">
-
+          <div>
             <label
-              htmlFor="search"
-              className="mb-2 block text-sm font-medium text-slate-300"
+              htmlFor="ticket-search"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
-              Search Tickets
+              Search tickets
             </label>
 
             <input
-              id="search"
+              id="ticket-search"
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by ID, customer, email, subject..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
+              placeholder="Search by ID, customer, email or subject..."
+              className="w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
             />
-
           </div>
 
-          {/* Status Filter */}
-          <div className="w-full md:w-56">
-
+          <div>
             <label
-              htmlFor="status"
-              className="mb-2 block text-sm font-medium text-slate-300"
+              htmlFor="status-filter"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
               Status
             </label>
 
             <select
-              id="status"
+              id="status-filter"
               value={status}
               onChange={(event) => setStatus(event.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
+              className="w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
             >
-              <option value="">All Statuses</option>
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Closed">Closed</option>
-            </select>
+              <option value="">
+                All statuses
+              </option>
 
+              <option value="Open">
+                Open
+              </option>
+
+              <option value="In Progress">
+                In Progress
+              </option>
+
+              <option value="Closed">
+                Closed
+              </option>
+            </select>
           </div>
 
-        </div>
+          {(search || status) && (
+            <button
+              onClick={clearFilters}
+              className="rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            >
+              Clear
+            </button>
+          )}
 
-        {/* Clear Filters */}
-        {(search || status) && (
-          <button
-            onClick={clearFilters}
-            className="mt-4 text-sm font-medium text-blue-400 transition hover:text-blue-300"
-          >
-            Clear filters
-          </button>
-        )}
+        </div>
 
       </div>
 
       {/* Tickets */}
-      <div className="mt-10">
+      <div className="mt-8">
 
         <div className="mb-4">
-          <h3 className="text-xl font-semibold text-white">
+          <h3 className="text-base font-semibold text-slate-900">
             Recent Tickets
           </h3>
 
-          <p className="text-sm text-slate-400">
+          <p className="mt-1 text-sm text-slate-500">
             Tickets received from your support system.
           </p>
         </div>
 
-        {loading ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
-            Loading tickets...
-          </div>
-        ) : tickets.length === 0 ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400">
-            No tickets found.
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
 
+          {loading ? (
+            <div className="px-6 py-12 text-center text-sm text-slate-500">
+              Loading tickets...
+            </div>
+          ) : error ? (
+            <div className="px-6 py-12 text-center text-sm text-red-600">
+              {error}
+            </div>
+          ) : tickets.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+
+              <p className="text-sm font-medium text-slate-700">
+                No tickets found
+              </p>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Try changing your search or filter.
+              </p>
+
+            </div>
+          ) : (
             <div className="overflow-x-auto">
 
-              <table className="w-full text-left">
+              <table className="w-full min-w-[720px] text-left">
 
-                <thead className="border-b border-slate-800 bg-slate-950">
+                <thead className="border-b border-slate-200 bg-slate-50">
 
                   <tr>
-
-                    <th className="px-6 py-4 text-sm font-medium text-slate-400">
-                      Ticket ID
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Ticket
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Customer
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Subject
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Status
                     </th>
 
-                    <th className="px-6 py-4 text-sm font-medium text-slate-400">
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Created
                     </th>
-
                   </tr>
 
                 </thead>
 
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
 
                   {tickets.map((ticket) => (
-
                     <tr
-                        key={ticket.ticket_id}
-                        onClick={() => navigate(`/tickets/${ticket.ticket_id}`)}
-                        className="cursor-pointer border-b border-slate-800 transition hover:bg-slate-800/50"
+                      key={ticket.ticket_id}
+                      onClick={() =>
+                        navigate(`/tickets/${ticket.ticket_id}`)
+                      }
+                      className="cursor-pointer transition hover:bg-slate-50"
                     >
 
-                      <td className="px-6 py-4 font-medium text-blue-400">
-                        {ticket.ticket_id}
+                      <td className="px-5 py-4">
+                        <span className="font-medium text-blue-600">
+                          {ticket.ticket_id}
+                        </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-4">
 
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-slate-900">
                           {ticket.customer_name}
                         </p>
 
-                        <p className="text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-slate-500">
                           {ticket.customer_email}
                         </p>
 
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-300">
-                        {ticket.subject}
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-slate-700">
+                          {ticket.subject}
+                        </span>
                       </td>
 
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-4">
 
-                        <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                                ticket.status === 'Open'
-                                ? 'bg-blue-500/10 text-blue-400'
-                                : ticket.status === 'In Progress'
-                                    ? 'bg-yellow-500/10 text-yellow-400'
-                                    : 'bg-green-500/10 text-green-400'
-                            }`}
-                            >
-                            {ticket.status}
-                            </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusClasses(
+                            ticket.status
+                          )}`}
+                        >
+                          {ticket.status}
                         </span>
 
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-slate-400">
-                        {new Date(ticket.created_at).toLocaleDateString()}
+                      <td className="px-5 py-4 text-sm text-slate-500">
+                        {new Date(
+                          ticket.created_at
+                        ).toLocaleDateString()}
                       </td>
 
                     </tr>
-
                   ))}
 
                 </tbody>
@@ -306,9 +342,9 @@ function Dashboard() {
               </table>
 
             </div>
+          )}
 
-          </div>
-        )}
+        </div>
 
       </div>
 
