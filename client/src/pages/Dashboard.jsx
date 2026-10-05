@@ -253,7 +253,7 @@ function Dashboard() {
           ) : (
             <div className="overflow-x-auto">
 
-              <table className="w-full min-w-[720px] text-left">
+              <table className="w-full min-w-[840px] text-left">
 
                 <thead className="border-b border-slate-200 bg-slate-50">
 
@@ -264,6 +264,10 @@ function Dashboard() {
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Customer
+                    </th>
+
+                    <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Assigned To
                     </th>
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -309,6 +313,12 @@ function Dashboard() {
                         </p>
 
                       </td>
+
+                      <td className="px-5 py-4">
+                         <span className="text-sm text-slate-700">
+                            {ticket.assigned_to || 'Unassigned'}
+                         </span>
+                     </td>
 
                       <td className="px-5 py-4">
                         <span className="text-sm text-slate-700">

@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getTicketById, updateTicket } from '../services/api'
 
+const SUPPORT_AGENTS = [
+  'Vaibhav Gupta',
+  'Amit Sharma',
+  'Sneha Patel',
+  'Rahul Mehta',
+]
+
 function TicketDetails() {
   const { ticketId } = useParams()
   const navigate = useNavigate()
@@ -13,6 +20,7 @@ function TicketDetails() {
 
   const [status, setStatus] = useState('')
   const [note, setNote] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
   const [updating, setUpdating] = useState(false)
 
   const fetchTicket = async () => {
@@ -25,6 +33,7 @@ function TicketDetails() {
       setTicket(data.ticket)
       setNotes(data.notes || [])
       setStatus(data.ticket.status)
+      setAssignedTo(data.ticket.assigned_to || '')
     } catch (error) {
       console.error(error)
       setError('Failed to load ticket')
@@ -38,8 +47,12 @@ function TicketDetails() {
   }, [ticketId])
 
   const handleUpdate = async () => {
-    if (!note.trim() && status === ticket.status) {
-      return
+    if (
+        !note.trim() &&
+        status === ticket.status &&
+        assignedTo === (ticket.assigned_to || '')
+    ) {
+        return
     }
 
     try {
@@ -48,6 +61,7 @@ function TicketDetails() {
 
       await updateTicket(ticketId, {
         status,
+        assigned_to: assignedTo || null,
         notes: note.trim(),
       })
 
@@ -229,6 +243,26 @@ function TicketDetails() {
 
         <div className="space-y-6 p-6">
 
+        <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+                Assigned To
+            </label>
+
+            <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+                <option value="">Unassigned</option>
+
+                {SUPPORT_AGENTS.map((agent) => (
+                <option key={agent} value={agent}>
+                    {agent}
+                </option>
+                ))}
+            </select>
+          </div>
+
           {/* Status */}
           <div>
             <label
@@ -278,18 +312,20 @@ function TicketDetails() {
           </div>
 
           <div className="flex justify-end border-t border-slate-100 pt-5">
-
-            <button
-              onClick={handleUpdate}
-              disabled={
-                updating ||
-                (!note.trim() && status === ticket.status)
-              }
-              className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {updating ? 'Saving...' : 'Save Changes'}
-            </button>
-
+        <button
+        onClick={handleUpdate}
+        disabled={
+            updating ||
+            (
+            !note.trim() &&
+            status === ticket.status &&
+            assignedTo === (ticket.assigned_to || '')
+            )
+        }
+        className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+        {updating ? 'Saving...' : 'Save Changes'}
+        </button>
           </div>
 
         </div>

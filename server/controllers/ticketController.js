@@ -6,7 +6,8 @@ export const createTicket = async (req, res) => {
       customer_name,
       customer_email,
       subject,
-      description
+      description,
+      assigned_to
     } = req.body
 
     // Basic validation
@@ -51,7 +52,9 @@ export const createTicket = async (req, res) => {
           customer_email,
           subject,
           description,
-          status: 'Open'
+          status: 'Open',
+          assigned_to: assigned_to || null
+
         }
       ])
       .select()
@@ -173,7 +176,7 @@ export const getTicketById = async (req, res) => {
 export const updateTicket = async (req, res) => {
   try {
     const { ticket_id } = req.params
-    const { status, notes } = req.body
+    const { status, notes, assigned_to} = req.body
 
     // Validate status if provided
     const allowedStatuses = ['Open', 'In Progress', 'Closed']
@@ -203,21 +206,20 @@ export const updateTicket = async (req, res) => {
       throw ticketError
     }
 
-    // Update ticket status
-    if (status) {
-      const { error: updateError } = await supabase
+    // Update ticket
+        const { error: updateError } = await supabase
         .from('tickets')
         .update({
-          status: status,
-          updated_at: new Date().toISOString()
+            status: status || existingTicket.status,
+            assigned_to: assigned_to || null,
+            updated_at: new Date().toISOString()
         })
         .eq('ticket_id', ticket_id)
 
-      if (updateError) {
+        if (updateError) {
         throw updateError
-      }
-    }
-
+        }
+        
     // Add note if provided
     let createdNote = null
 

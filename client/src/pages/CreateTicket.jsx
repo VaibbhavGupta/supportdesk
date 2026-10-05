@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createTicket } from '../services/api'
 
+const SUPPORT_AGENTS = [
+  'Vaibhav Gupta',
+  'Amit Sharma',
+  'Sneha Patel',
+  'Rahul Mehta',
+]
+
 function CreateTicket() {
   const navigate = useNavigate()
 
@@ -10,6 +17,7 @@ function CreateTicket() {
     customer_email: '',
     subject: '',
     description: '',
+    assigned_to: '',
   })
 
   const [loading, setLoading] = useState(false)
@@ -137,6 +145,27 @@ function CreateTicket() {
                 />
               </div>
 
+            </div>
+
+            <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Assigned To
+                </label>
+
+                <select
+                    name="assigned_to"
+                    value={formData.assigned_to}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
+                    <option value="">Select support agent</option>
+
+                    {SUPPORT_AGENTS.map((agent) => (
+                    <option key={agent} value={agent}>
+                        {agent}
+                    </option>
+                    ))}
+                </select>
             </div>
 
             {/* Subject */}
